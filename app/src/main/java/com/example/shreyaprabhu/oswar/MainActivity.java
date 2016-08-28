@@ -16,6 +16,7 @@ import android.telephony.SmsManager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -46,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private long lastUpdate = 0;
     private float last_x, last_y, last_z;
     private static final int SHAKE_THRESHOLD = 600;
+    Button b1;
     Context context;
 
 
@@ -53,6 +55,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
+        b1 = (Button) findViewById(R.id.button2);
+        b1.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View view) {
+                Intent activityChangeIntent = new Intent(MainActivity.this, MapsActivity.class);
+
+                // currentContext.startActivity(activityChangeIntent);
+
+                MainActivity.this.startActivity(activityChangeIntent);
+            }
+        });
+
 
         txtSpeechInput = (TextView) findViewById(R.id.txtSpeechInput);
         btnSpeak = (ImageButton) findViewById(R.id.btnSpeak);
