@@ -12,6 +12,7 @@ import android.speech.RecognizerIntent;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.telephony.SmsManager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -115,8 +116,24 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
                     ArrayList<String> result = data
                             .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                    if (result.get(0).equals(help1)||result.get(0).equals(help2)||result.get(0).equals(yelp1)||result.get(0).equals(yelp2)||result.get(0).equals(helpm1)||result.get(0).equals(helpm2))
-                    txtSpeechInput.setText(result.get(0));
+                    if (result.get(0).equals(help1)||result.get(0).equals(help2)||result.get(0).equals(yelp1)||result.get(0).equals(yelp2)||result.get(0).equals(helpm1)||result.get(0).equals(helpm2)) {
+                        txtSpeechInput.setText(result.get(0));
+
+                        String phoneNo = "9663985049";
+                        String sms = "Help";
+
+                        try {
+                            SmsManager smsManager = SmsManager.getDefault();
+                            smsManager.sendTextMessage(phoneNo, null, sms, null, null);
+                            Toast.makeText(getApplicationContext(), "SMS Sent!",
+                                    Toast.LENGTH_LONG).show();
+                        } catch (Exception e) {
+                            Toast.makeText(getApplicationContext(),
+                                    "SMS faild, please try again later!",
+                                    Toast.LENGTH_LONG).show();
+                            e.printStackTrace();
+                        }
+                    }
                 }
                 break;
             }
