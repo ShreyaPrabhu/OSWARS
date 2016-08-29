@@ -1,27 +1,37 @@
 package com.example.shreyaprabhu.oswar;
 
+import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.speech.RecognizerIntent;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.telephony.SmsManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 
@@ -40,13 +50,26 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private ImageButton btnSpeak;
     private final int REQ_CODE_SPEECH_INPUT = 100;
 
+
+    //contacts
+    static final int PICK_CONTACT = 1;
+    private Button contact_button;
+    private static final int PERMISSIONS_REQUEST_READ_CONTACTS = 100;
+    private RecyclerView recyclerView;
+    private ContactsAdapter adapter;
+    private List<ContactModel> contactList;
+    Cursor cursor;
+    ListView listview;
+    SimpleCursorAdapter cursorAdapter;
+    EventsDbHandler eventsDbHelper;
+
     //Accelerometer
     //Accelerometer
     private SensorManager senSensorManager;
     private Sensor senaccelerometer;
     private long lastUpdate = 0;
     private float last_x, last_y, last_z;
-    private static final int SHAKE_THRESHOLD = 600;
+    private static final int SHAKE_THRESHOLD = 2000;
     Button b1;
     Context context;
 
@@ -57,6 +80,49 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         setContentView(R.layout.activity_main);
 
 
+        //recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+
+        contactList = new ArrayList<>();
+        adapter = new ContactsAdapter(MainActivity.this, contactList);
+        //recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        listview = (ListView) findViewById(R.id.list_view);
+        /*recyclerView.setLayoutManager(new GridLayoutManager(MainActivity.this, 1));
+        recyclerView.setAdapter(adapter);*/
+        eventsDbHelper = new EventsDbHandler(this);
+
+        cursor = eventsDbHelper.getAllEvents();
+        String[] columns = new String[]{
+                EventsDbHandler.EVENT_COLUMN_NAME,
+                EventsDbHandler.EVENT_COLUMN_PHONE
+
+        };
+
+
+        int[] widgets = new int[]{
+                R.id.contact_name,
+                R.id.contact_phone
+        };
+
+        cursorAdapter = new SimpleCursorAdapter(this, R.layout.contact_item,
+                cursor, columns, widgets, 0);
+        listview.setAdapter(cursorAdapter);
+
+
+        contact_button = (Button)findViewById(R.id.contact_button);
+        contact_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+                    requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, PERMISSIONS_REQUEST_READ_CONTACTS);
+                    //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
+                }
+                else{*/
+                Intent intent = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
+                startActivityForResult(intent, PICK_CONTACT);
+                // }
+
+            }
+        });
         b1 = (Button) findViewById(R.id.button2);
         b1.setOnClickListener(new View.OnClickListener() {
 
@@ -128,6 +194,51 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onActivityResult(requestCode, resultCode, data);
 
         switch (requestCode) {
+            case (PICK_CONTACT):
+                if (resultCode == Activity.RESULT_OK) {
+
+                    Uri contactData = data.getData();
+                    ContentResolver contentResolver = getContentResolver();
+                    Cursor c = contentResolver.query(contactData, null, null, null, null);
+                    if (c.moveToFirst()) {
+                        String cNumber = new String();
+
+                        String id = c.getString(c.getColumnIndexOrThrow(ContactsContract.Contacts._ID));
+
+                        String hasPhone = c.getString(c.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER));
+
+                        if (hasPhone.equalsIgnoreCase("1")) {
+
+                            Cursor phones = getContentResolver().query(
+                                    ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
+                                    ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = " + id,
+                                    null, null);
+                            phones.moveToFirst();
+                            cNumber = phones.getString(phones.getColumnIndex("data1"));
+
+                        }
+                        String name = c.getString(c.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+
+                        Log.d("number", cNumber);
+                        Log.d("name", name);
+                        ContactModel contactModel  = new ContactModel();
+                        contactModel.setName(name);
+                        contactModel.setPhone(cNumber);
+                        contactList.add(contactModel);
+                        if (eventsDbHelper.insertEvent(contactModel.getName(),contactModel.getPhone())) {
+                            Toast.makeText(getApplicationContext(), "Event Added", Toast.LENGTH_SHORT).show();
+                            cursorAdapter.notifyDataSetChanged();
+                            cursor.requery();
+
+                        } else {
+                            Toast.makeText(getApplicationContext(), "Could not Add Event", Toast.LENGTH_SHORT).show();
+                        }
+                        //adapter.notifyDataSetChanged();
+
+                    }
+                }
+                break;
+
             case REQ_CODE_SPEECH_INPUT: {
                 if (resultCode == RESULT_OK && null != data) {
 

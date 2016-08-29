@@ -13,8 +13,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
-    private double lat=12.696969;
-    private double lon=77.6969696;
+    private double lat=12.97494;
+    private double lon=77.605328;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
