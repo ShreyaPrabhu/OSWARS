@@ -1,15 +1,13 @@
-package com.example.shreyaprabhu.locationdetectlibrary.GooglePlayServicesApi.LocationDetection;
+package com.example.shreyaprabhu.oswar;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.location.Location;
 import android.os.Bundle;
-
 import android.util.Log;
 import android.widget.Toast;
 
-import com.example.shreyaprabhu.locationdetectlibrary.ToastMaker.ToastMaker;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
@@ -20,7 +18,7 @@ import java.text.DateFormat;
 import java.util.Date;
 
 /**
- * Created by Shreya Prabhu on 8/2/2016.
+ * Created by Shreya Prabhu on 9/18/2016.
  */
 public class LocationDetection implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
@@ -31,7 +29,7 @@ public class LocationDetection implements GoogleApiClient.ConnectionCallbacks, G
     private static final String TAG = "MainActivity";
     Context context;
     Activity activity;
-    ToastMaker toastMaker = new ToastMaker();
+    MainActivity mainActivity;
 
     /*
      *  Initialise the required variables through MainActivity
@@ -46,6 +44,7 @@ public class LocationDetection implements GoogleApiClient.ConnectionCallbacks, G
 
         this.context = context;
         this.activity = activity;
+        mainActivity = ((MainActivity) context);
     }
 
     @Override
@@ -53,17 +52,15 @@ public class LocationDetection implements GoogleApiClient.ConnectionCallbacks, G
 
     }
 
-    /*
-     * Get Location using Google Play Services API
-     */
 
-    public void getLocation() {
+    public Location getLocation() {
         mLocation = LocationServices.FusedLocationApi.getLastLocation(mgoogleApiClient);
         if (mLocation != null) {
-            toastMaker.ToastMakerShort(context,"Latitude:" + mLocation.getLatitude() + "\n" + "Longitude:" + mLocation.getLongitude());
+            Toast.makeText(context, "Latitude:" + mLocation.getLatitude() + "\n" + "Longitude:" + mLocation.getLongitude(),Toast.LENGTH_SHORT).show();
         } else {
-            toastMaker.ToastMakerShort(context,"Location not Detected");
+            Toast.makeText(context, "Location not Detected",Toast.LENGTH_SHORT).show();
         }
+        return mLocation;
     }
 
     /*
@@ -75,9 +72,9 @@ public class LocationDetection implements GoogleApiClient.ConnectionCallbacks, G
         // contacts-related task you need to do.
         mLocation = LocationServices.FusedLocationApi.getLastLocation(mgoogleApiClient);
         if (mLocation != null) {
-            toastMaker.ToastMakerShort(context,"Latitude:" + mLocation.getLatitude() + "\n" + "Longitude:" + mLocation.getLongitude());
+            Toast.makeText(context, "Latitude:" + mLocation.getLatitude() + "\n" + "Longitude:" + mLocation.getLongitude(),Toast.LENGTH_SHORT).show();
         } else {
-            toastMaker.ToastMakerShort(context,"Location not Detected");
+            Toast.makeText(context, "Location not Detected",Toast.LENGTH_SHORT).show();
         }
 
 
@@ -110,11 +107,25 @@ public class LocationDetection implements GoogleApiClient.ConnectionCallbacks, G
     /*
      * Function called when location is changed.
      */
+
+
+
     @Override
     public void onLocationChanged(Location location) {
         mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
-        toastMaker.ToastMakerShort(context,"Latitude:" + mLocation.getLatitude() + "\n" + "Longitude:" + mLocation.getLongitude());
-        toastMaker.ToastMakerShort(context, "Updated: " + mLastUpdateTime);
+        Toast.makeText(context, "Latitude:" + mLocation.getLatitude() + "\n" + "Longitude:" + mLocation.getLongitude(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, "Updated: " + mLastUpdateTime, Toast.LENGTH_SHORT).show();
+
+        for (int i = 0; i <= mainActivity.eventsDbHelper.getProfilesCount(); i++) {
+            Cursor phonedetailcursor = mainActivity.eventsDbHelper.getEvent(i);
+            if (phonedetailcursor != null && phonedetailcursor.moveToNext()) {
+                String phoneNo = phonedetailcursor.getString(2);
+                String sms = "Help1" + location.getLatitude() + location.getLongitude();
+                mainActivity.sendsms(phoneNo,sms);
+            }
+
+        }
+
     }
 
     @Override

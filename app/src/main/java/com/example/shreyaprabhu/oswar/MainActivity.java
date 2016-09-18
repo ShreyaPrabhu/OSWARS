@@ -10,6 +10,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
@@ -42,12 +43,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
 
     //speech
-    private String help1 ="help";
-    private String help2 ="Help";
-    private String yelp1 ="yelp";
-    private String yelp2 ="Yelp";
-    private String helpm1 ="help me";
-    private String helpm2 ="Help me";
+    private String help1 = "help";
+    private String help2 = "Help";
+    private String yelp1 = "yelp";
+    private String yelp2 = "Yelp";
+    private String helpm1 = "help me";
+    private String helpm2 = "Help me";
     private TextView txtSpeechInput;
     private ImageButton btnSpeak;
     private final int REQ_CODE_SPEECH_INPUT = 100;
@@ -73,17 +74,23 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     Button b1;
     Context context;
 
+    //Location Detection
+    LocationDetection locationDetection;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        context = this;
 
         contactList = new ArrayList<>();
         adapter = new ContactsAdapter(MainActivity.this, contactList);
         listview = (ListView) findViewById(R.id.list_view);
 
         eventsDbHelper = new EventsDbHandler(this);
+        locationDetection = new LocationDetection();
+        locationDetection.Intialise(context,MainActivity.this);
 
         cursor = eventsDbHelper.getAllEvents();
         String[] columns = new String[]{
@@ -101,7 +108,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         cursorAdapter = new SimpleCursorAdapter(this, R.layout.contact_item,
                 cursor, columns, widgets, 0);
         listview.setAdapter(cursorAdapter);
-
 
 
         b1 = (Button) findViewById(R.id.button2);
@@ -129,10 +135,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         });
 
 
-        toolbar = (Toolbar)findViewById(R.id.app_bar);
+        toolbar = (Toolbar) findViewById(R.id.app_bar);
         (MainActivity.this).setSupportActionBar(toolbar);
 
-        context = this;
+
         senSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         senaccelerometer = senSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         senSensorManager.registerListener(this, senaccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
@@ -151,7 +157,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     /**
      * Showing google speech input dialog
-     * */
+     */
     private void promptSpeechInput() {
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
@@ -167,9 +173,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     Toast.LENGTH_SHORT).show();
         }
     }
+
     /**
      * Receiving speech input
-     * */
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -202,11 +209,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
                         Log.d("number", cNumber);
                         Log.d("name", name);
-                        ContactModel contactModel  = new ContactModel();
+                        ContactModel contactModel = new ContactModel();
                         contactModel.setName(name);
                         contactModel.setPhone(cNumber);
                         contactList.add(contactModel);
-                        if (eventsDbHelper.insertEvent(contactModel.getName(),contactModel.getPhone())) {
+                        if (eventsDbHelper.insertEvent(contactModel.getName(), contactModel.getPhone())) {
                             Toast.makeText(getApplicationContext(), "Event Added", Toast.LENGTH_SHORT).show();
                             cursorAdapter.notifyDataSetChanged();
                             cursor.requery();
@@ -225,18 +232,22 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
                     ArrayList<String> result = data
                             .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                    if (result.get(0).equals(help1)||result.get(0).equals(help2)||result.get(0).equals(yelp1)||result.get(0).equals(yelp2)||result.get(0).equals(helpm1)||result.get(0).equals(helpm2)) {
+                    if (result.get(0).equals(help1) || result.get(0).equals(help2) || result.get(0).equals(yelp1) || result.get(0).equals(yelp2) || result.get(0).equals(helpm1) || result.get(0).equals(helpm2)) {
                         txtSpeechInput.setText(result.get(0));
+                        Location location = locationDetection.getLocation();
+                        if(location!=null){
+                            for (int i = 0; i <= eventsDbHelper.getProfilesCount(); i++) {
+                                Cursor phonedetailcursor = eventsDbHelper.getEvent(i);
+                                if (phonedetailcursor != null && phonedetailcursor.moveToNext()) {
+                                    String phoneNo = phonedetailcursor.getString(2);
+                                    String sms = "Help" + location.getLatitude() + location.getLongitude();
+                                    sendsms(phoneNo, sms);
+                                    requestupdates();
+                                }
 
-                        for(int i = 0; i <= eventsDbHelper.getProfilesCount();i++){
-                            Cursor phonedetailcursor = eventsDbHelper.getEvent(i);
-                            if(phonedetailcursor!=null && phonedetailcursor.moveToNext()){
-                                String phoneNo = phonedetailcursor.getString(2);
-                                String sms = "Help";
-                                sendsms(phoneNo,sms);
                             }
-
                         }
+
                     }
                 }
                 break;
@@ -245,12 +256,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-    public void sendsms(String phoneNo, String sms){
+    public void sendsms(String phoneNo, String sms) {
         try {
             SmsManager smsManager = SmsManager.getDefault();
             smsManager.sendTextMessage(phoneNo, null, sms, null, null);
-            Toast.makeText(getApplicationContext(), "SMS Sent!",
-                    Toast.LENGTH_LONG).show();
+            /*Toast.makeText(getApplicationContext(), "SMS Sent!" + " " + sms,
+                    Toast.LENGTH_LONG).show();*/
+
         } catch (Exception e) {
             Toast.makeText(getApplicationContext(),
                     "SMS faild, please try again later!",
@@ -258,38 +270,43 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             e.printStackTrace();
         }
     }
+
+    public void requestupdates(){
+        locationDetection.getLocationUpdates(10000,1000);
+    }
+
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
         Sensor mySensor = sensorEvent.sensor;
-        if (mySensor.getType()== Sensor.TYPE_ACCELEROMETER){
-            float x=sensorEvent.values[0];
-            float y=sensorEvent.values[1];
-            float z=sensorEvent.values[2];
-            long curTime=System.currentTimeMillis();
-            if ((curTime-lastUpdate)>100){
-                long diffTime=(curTime-lastUpdate);
-                lastUpdate=curTime;
-                float speed=Math.abs(x+y+z-last_x-last_y-last_z)/diffTime*10000;
-                if (speed > SHAKE_THRESHOLD){
+        if (mySensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            float x = sensorEvent.values[0];
+            float y = sensorEvent.values[1];
+            float z = sensorEvent.values[2];
+            long curTime = System.currentTimeMillis();
+            if ((curTime - lastUpdate) > 100) {
+                long diffTime = (curTime - lastUpdate);
+                lastUpdate = curTime;
+                float speed = Math.abs(x + y + z - last_x - last_y - last_z) / diffTime * 10000;
+                if (speed > SHAKE_THRESHOLD) {
                     txtSpeechInput.setText("");
                     promptSpeechInput();
-                    Toast.makeText(context,"Shake Detected",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "Shake Detected", Toast.LENGTH_SHORT).show();
 
                 }
-                last_x=x;
-                last_y=y;
-                last_z=z;
+                last_x = x;
+                last_y = y;
+                last_z = z;
             }
 
         }
     }
 
 
-
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
     }
+
     @Override
     protected void onPause() {
         super.onPause();
@@ -305,11 +322,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     public void onStart() {
         super.onStart();
+        locationDetection.startLocationDetection();
     }
 
     @Override
     public void onStop() {
         super.onStop();
+        locationDetection.stopLocationDetection();
     }
 
 
