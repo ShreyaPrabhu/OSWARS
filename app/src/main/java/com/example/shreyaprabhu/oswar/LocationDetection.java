@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -16,6 +17,8 @@ import com.google.android.gms.location.LocationServices;
 
 import java.text.DateFormat;
 import java.util.Date;
+
+import static com.example.shreyaprabhu.oswar.MainActivity.*;
 
 /**
  * Created by Shreya Prabhu on 9/18/2016.
@@ -31,6 +34,8 @@ public class LocationDetection implements GoogleApiClient.ConnectionCallbacks, G
     Activity activity;
     MainActivity mainActivity;
     MapsActivity mapsActivity;
+    String sms ="";
+    String phoneNo = "";
 
     /*
      *  Initialise the required variables through MainActivity
@@ -121,14 +126,36 @@ public class LocationDetection implements GoogleApiClient.ConnectionCallbacks, G
         for (int i = 0; i <= mainActivity.eventsDbHelper.getProfilesCount(); i++) {
             Cursor phonedetailcursor = mainActivity.eventsDbHelper.getEvent(i);
             if (phonedetailcursor != null && phonedetailcursor.moveToNext()) {
-                String phoneNo = phonedetailcursor.getString(2);
-                String sms = "Help1" + location.getLatitude() + location.getLongitude();
+                phoneNo = phonedetailcursor.getString(2);
+                double lat = location.getLatitude();
+                double lon = location.getLongitude();
+                mainActivity.locationAddress.getAddressFromLocation(lat,lon,context,new GeocoderHandler());
                 mapsActivity.setLatLng(location.getLatitude(),location.getLongitude());
                 mainActivity.sendsms(phoneNo,sms);
             }
 
         }
 
+    }
+
+    public class GeocoderHandler extends android.os.Handler{
+        @Override
+        public void handleMessage(Message message){
+            String locationAddress;
+            switch (message.what){
+                case 1:
+                    Bundle bundle = message.getData();
+                    locationAddress = bundle.getString("address");
+                    break;
+                default:
+                    locationAddress=null;
+            }
+            mainActivity.address.setText(locationAddress);
+            sms = locationAddress;
+            mainActivity.sendsms(phoneNo, sms);
+            mainActivity.requestupdates();
+
+        }
     }
 
     @Override

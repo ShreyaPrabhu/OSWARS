@@ -367,7 +367,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         return super.onOptionsItemSelected(item);
     }
-    private class GeocoderHandler extends android.os.Handler{
+    public class GeocoderHandler extends android.os.Handler{
         @Override
         public void handleMessage(Message message){
             String locationAddress;
