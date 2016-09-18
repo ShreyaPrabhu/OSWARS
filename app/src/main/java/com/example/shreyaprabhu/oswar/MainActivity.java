@@ -30,7 +30,6 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.location.Address;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,11 +41,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private android.support.v7.widget.Toolbar toolbar;
     private FloatingActionButton fab;
 
-    //Geodecoder hardcoded
-    private double latitude=12.97494;
-    private double longitude=77.605328;
+    //Geodecoder
     LocationAddress locationAddress;
-    TextView textView;
+    String sms = "";
+    TextView address;
 
 
     //speech
@@ -71,6 +69,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     ListView listview;
     SimpleCursorAdapter cursorAdapter;
     EventsDbHandler eventsDbHelper;
+    String phoneNo="";
 
     //Accelerometer
     private SensorManager senSensorManager;
@@ -92,10 +91,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         setContentView(R.layout.activity_main);
         context = this;
 
-        textView = (TextView) findViewById(R.id.Address);
         locationAddress = new LocationAddress();
-        locationAddress.getAddressFromLocation(latitude,longitude,getApplicationContext(),new GeocoderHandler());
 
+        address = (TextView) findViewById(R.id.address);
         mapsActivity = new MapsActivity();
         contactList = new ArrayList<>();
         adapter = new ContactsAdapter(MainActivity.this, contactList);
@@ -252,11 +250,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                             for (int i = 0; i <= eventsDbHelper.getProfilesCount(); i++) {
                                 Cursor phonedetailcursor = eventsDbHelper.getEvent(i);
                                 if (phonedetailcursor != null && phonedetailcursor.moveToNext()) {
-                                    String phoneNo = phonedetailcursor.getString(2);
-                                    String sms = "Help" + location.getLatitude() + location.getLongitude();
+                                    phoneNo = phonedetailcursor.getString(2);
+                                    double lat = location.getLatitude();
+                                    double lon = location.getLongitude();
+                                    locationAddress.getAddressFromLocation(lat,lon,getApplicationContext(),new GeocoderHandler());
                                     mapsActivity.setLatLng(location.getLatitude(),location.getLongitude());
-                                    sendsms(phoneNo, sms);
-                                    requestupdates();
+
                                 }
 
                             }
@@ -380,7 +379,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 default:
                     locationAddress=null;
             }
-            textView.setText(locationAddress);
+            address.setText(locationAddress);
+            sms = locationAddress;
+            sendsms(phoneNo, sms);
+            requestupdates();
+
         }
     }
 }
