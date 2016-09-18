@@ -13,6 +13,7 @@ import android.hardware.SensorManager;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Message;
 import android.provider.ContactsContract;
 import android.speech.RecognizerIntent;
 import android.support.design.widget.FloatingActionButton;
@@ -29,6 +30,7 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.location.Address;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,6 +41,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private android.support.v7.widget.Toolbar toolbar;
     private FloatingActionButton fab;
+
+    //Geodecoder hardcoded
+    private double latitude=12.97494;
+    private double longitude=77.605328;
+    LocationAddress locationAddress;
+    TextView textView;
 
 
     //speech
@@ -83,6 +91,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         context = this;
+
+        textView = (TextView) findViewById(R.id.Address);
+        locationAddress = new LocationAddress();
+        locationAddress.getAddressFromLocation(latitude,longitude,getApplicationContext(),new GeocoderHandler());
 
         mapsActivity = new MapsActivity();
         contactList = new ArrayList<>();
@@ -355,5 +367,20 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
 
         return super.onOptionsItemSelected(item);
+    }
+    private class GeocoderHandler extends android.os.Handler{
+        @Override
+        public void handleMessage(Message message){
+            String locationAddress;
+            switch (message.what){
+                case 1:
+                    Bundle bundle = message.getData();
+                    locationAddress = bundle.getString("address");
+                    break;
+                default:
+                    locationAddress=null;
+            }
+            textView.setText(locationAddress);
+        }
     }
 }
