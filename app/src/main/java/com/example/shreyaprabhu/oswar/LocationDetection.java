@@ -30,6 +30,7 @@ public class LocationDetection implements GoogleApiClient.ConnectionCallbacks, G
     Context context;
     Activity activity;
     MainActivity mainActivity;
+    MapsActivity mapsActivity;
 
     /*
      *  Initialise the required variables through MainActivity
@@ -45,6 +46,7 @@ public class LocationDetection implements GoogleApiClient.ConnectionCallbacks, G
         this.context = context;
         this.activity = activity;
         mainActivity = ((MainActivity) context);
+        mapsActivity = new MapsActivity();
     }
 
     @Override
@@ -121,6 +123,7 @@ public class LocationDetection implements GoogleApiClient.ConnectionCallbacks, G
             if (phonedetailcursor != null && phonedetailcursor.moveToNext()) {
                 String phoneNo = phonedetailcursor.getString(2);
                 String sms = "Help1" + location.getLatitude() + location.getLongitude();
+                mapsActivity.setLatLng(location.getLatitude(),location.getLongitude());
                 mainActivity.sendsms(phoneNo,sms);
             }
 

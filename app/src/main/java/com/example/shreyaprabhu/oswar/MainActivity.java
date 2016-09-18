@@ -76,6 +76,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     //Location Detection
     LocationDetection locationDetection;
 
+    MapsActivity mapsActivity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,6 +84,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         setContentView(R.layout.activity_main);
         context = this;
 
+        mapsActivity = new MapsActivity();
         contactList = new ArrayList<>();
         adapter = new ContactsAdapter(MainActivity.this, contactList);
         listview = (ListView) findViewById(R.id.list_view);
@@ -90,6 +92,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         eventsDbHelper = new EventsDbHandler(this);
         locationDetection = new LocationDetection();
         locationDetection.Intialise(context,MainActivity.this);
+
 
         cursor = eventsDbHelper.getAllEvents();
         String[] columns = new String[]{
@@ -115,7 +118,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             @Override
             public void onClick(View view) {
                 Intent activityChangeIntent = new Intent(MainActivity.this, MapsActivity.class);
-
                 MainActivity.this.startActivity(activityChangeIntent);
             }
         });
@@ -240,6 +242,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                                 if (phonedetailcursor != null && phonedetailcursor.moveToNext()) {
                                     String phoneNo = phonedetailcursor.getString(2);
                                     String sms = "Help" + location.getLatitude() + location.getLongitude();
+                                    mapsActivity.setLatLng(location.getLatitude(),location.getLongitude());
                                     sendsms(phoneNo, sms);
                                     requestupdates();
                                 }
