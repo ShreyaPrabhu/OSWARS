@@ -55,7 +55,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     //contacts
     static final int PICK_CONTACT = 1;
-    private Button contact_button;
     private static final int PERMISSIONS_REQUEST_READ_CONTACTS = 100;
     private RecyclerView recyclerView;
     private ContactsAdapter adapter;
@@ -104,21 +103,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         listview.setAdapter(cursorAdapter);
 
 
-        contact_button = (Button)findViewById(R.id.contact_button);
-        contact_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-                    requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, PERMISSIONS_REQUEST_READ_CONTACTS);
-                    //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
-                }
-                else{*/
-                Intent intent = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
-                startActivityForResult(intent, PICK_CONTACT);
-                // }
 
-            }
-        });
         b1 = (Button) findViewById(R.id.button2);
         b1.setOnClickListener(new View.OnClickListener() {
 
@@ -154,10 +139,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
 
         fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setImageResource(R.drawable.contacts);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(MainActivity.this, "FAB CLICKED", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
+                startActivityForResult(intent, PICK_CONTACT);
             }
         });
     }
