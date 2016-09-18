@@ -347,6 +347,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            locationDetection.stopLocationDetection();
             return true;
         }
 
