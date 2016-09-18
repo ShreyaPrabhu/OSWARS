@@ -39,6 +39,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private android.support.v7.widget.Toolbar toolbar;
     private FloatingActionButton fab;
+
+
     //speech
     private String help1 ="help";
     private String help2 ="Help";
@@ -64,7 +66,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     EventsDbHandler eventsDbHelper;
 
     //Accelerometer
-    //Accelerometer
     private SensorManager senSensorManager;
     private Sensor senaccelerometer;
     private long lastUpdate = 0;
@@ -79,15 +80,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
-        //recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
-
         contactList = new ArrayList<>();
         adapter = new ContactsAdapter(MainActivity.this, contactList);
-        //recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         listview = (ListView) findViewById(R.id.list_view);
-        /*recyclerView.setLayoutManager(new GridLayoutManager(MainActivity.this, 1));
-        recyclerView.setAdapter(adapter);*/
+
         eventsDbHelper = new EventsDbHandler(this);
 
         cursor = eventsDbHelper.getAllEvents();
@@ -129,8 +125,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             @Override
             public void onClick(View view) {
                 Intent activityChangeIntent = new Intent(MainActivity.this, MapsActivity.class);
-
-                // currentContext.startActivity(activityChangeIntent);
 
                 MainActivity.this.startActivity(activityChangeIntent);
             }
@@ -247,25 +241,34 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     if (result.get(0).equals(help1)||result.get(0).equals(help2)||result.get(0).equals(yelp1)||result.get(0).equals(yelp2)||result.get(0).equals(helpm1)||result.get(0).equals(helpm2)) {
                         txtSpeechInput.setText(result.get(0));
 
-                        String phoneNo = "9663985049";
-                        String sms = "Help";
+                        for(int i = 0; i <= eventsDbHelper.getProfilesCount();i++){
+                            Cursor phonedetailcursor = eventsDbHelper.getEvent(i);
+                            if(phonedetailcursor!=null && phonedetailcursor.moveToNext()){
+                                String phoneNo = phonedetailcursor.getString(2);
+                                String sms = "Help";
+                                sendsms(phoneNo,sms);
+                            }
 
-                        try {
-                            SmsManager smsManager = SmsManager.getDefault();
-                            smsManager.sendTextMessage(phoneNo, null, sms, null, null);
-                            Toast.makeText(getApplicationContext(), "SMS Sent!",
-                                    Toast.LENGTH_LONG).show();
-                        } catch (Exception e) {
-                            Toast.makeText(getApplicationContext(),
-                                    "SMS faild, please try again later!",
-                                    Toast.LENGTH_LONG).show();
-                            e.printStackTrace();
                         }
                     }
                 }
                 break;
             }
 
+        }
+    }
+
+    public void sendsms(String phoneNo, String sms){
+        try {
+            SmsManager smsManager = SmsManager.getDefault();
+            smsManager.sendTextMessage(phoneNo, null, sms, null, null);
+            Toast.makeText(getApplicationContext(), "SMS Sent!",
+                    Toast.LENGTH_LONG).show();
+        } catch (Exception e) {
+            Toast.makeText(getApplicationContext(),
+                    "SMS faild, please try again later!",
+                    Toast.LENGTH_LONG).show();
+            e.printStackTrace();
         }
     }
     @Override
