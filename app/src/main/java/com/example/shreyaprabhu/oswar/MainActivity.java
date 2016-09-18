@@ -19,7 +19,6 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.telephony.SmsManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -258,10 +257,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     public void sendsms(String phoneNo, String sms) {
         try {
-            SmsManager smsManager = SmsManager.getDefault();
-            smsManager.sendTextMessage(phoneNo, null, sms, null, null);
-            /*Toast.makeText(getApplicationContext(), "SMS Sent!" + " " + sms,
-                    Toast.LENGTH_LONG).show();*/
+            /*SmsManager smsManager = SmsManager.getDefault();
+            smsManager.sendTextMessage(phoneNo, null, sms, null, null);*/
+            Toast.makeText(getApplicationContext(), "SMS Sent!" + " " + sms,
+                    Toast.LENGTH_LONG).show();
 
         } catch (Exception e) {
             Toast.makeText(getApplicationContext(),
